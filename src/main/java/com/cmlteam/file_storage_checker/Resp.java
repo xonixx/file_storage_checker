@@ -22,4 +22,8 @@ public class Resp {
   public String toString() {
     return responseEntity.toString();
   }
+
+  public Map<String, ?> getJson() {
+    return json;
+  }
 }
