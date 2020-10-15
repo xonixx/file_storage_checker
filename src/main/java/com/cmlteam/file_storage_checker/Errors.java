@@ -5,13 +5,14 @@ import java.util.List;
 
 public class Errors {
 
-  List<String> errorMsgs = new ArrayList<>();
+  private final List<String> errorMsgs = new ArrayList<>();
+  private int i = 0;
 
   void addError(String msg, Resp resp) {
-    errorMsgs.add(msg + ". Response was: \n--------" + resp + "\n---------\n");
+    errorMsgs.add((++i) + ". " + msg + ". Response was: \n--------" + resp + "\n---------\n");
   }
 
   public String report() {
-    return "Errors found:\n\n" + String.join("\n", errorMsgs);
+    return "FOUND " + errorMsgs.size() + " ERRORS:\n\n" + String.join("\n", errorMsgs);
   }
 }

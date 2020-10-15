@@ -16,6 +16,11 @@ public class FileStorageChecker {
 
     Errors errors = new Errors();
 
+    req.addErrHandler(
+        (httpMethod, url, resp, errMsg) -> {
+          errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp);
+        });
+
     Resp resp = req.get(ENDPOINT);
 
     int total = (Integer) resp.getJson().get("total");
@@ -26,13 +31,15 @@ public class FileStorageChecker {
 
     System.out.println(resp);
 
-//    Resp resp1 = req.post(ENDPOINT, json().add("name", "zzzz.txt").add("size", 123));
+    Resp resp1 = req.post(ENDPOINT, json().add("name", "zzzz.txt").add("size", 123));
 
-//    System.out.println(resp1);
+    System.out.println(resp1);
 
     Resp resp3 = req.get(ENDPOINT);
     System.out.println(resp3);
 
+    System.out.println();
     System.out.println(errors.report());
+    System.out.println();
   }
 }
