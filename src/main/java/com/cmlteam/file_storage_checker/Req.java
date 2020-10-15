@@ -20,6 +20,10 @@ public class Req {
 
   private final List<ErrHandler> errorHandlers = new ArrayList<>();
 
+  public Req() {
+    this(new RestTemplate());
+  }
+
   @FunctionalInterface
   interface ErrHandler {
     void handleError(HttpMethod httpMethod, String url, Resp resp, String errMsg);

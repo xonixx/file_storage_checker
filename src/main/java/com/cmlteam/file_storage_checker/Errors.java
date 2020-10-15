@@ -9,7 +9,7 @@ public class Errors {
   private int i = 0;
 
   void addError(String msg, Resp resp) {
-    errorMsgs.add((++i) + ". " + msg + ". Response was: \n--------" + resp + "\n---------\n");
+    errorMsgs.add((++i) + ". " + msg + ". Response was: \n--------\n" + resp + "\n---------\n");
   }
 
   public String report() {

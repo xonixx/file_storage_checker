@@ -12,6 +12,26 @@ public class FileStorageChecker {
 
   @PostConstruct
   void run() {
+    try {
+      runSuit();
+    } finally {
+      deleteAllFilesFromES();
+    }
+  }
+
+  private void deleteAllFilesFromES() {
+    Resp resp =
+        new Req()
+            .post(
+                "http://localhost:9200/file/_delete_by_query",
+                json().add("query", json().add("match_all", json())));
+
+    if (resp.getStatus() != 200) {
+      throw new RuntimeException("" + resp);
+    }
+  }
+
+  private void runSuit() {
     String ENDPOINT = "http://localhost:8080/file";
 
     Errors errors = new Errors();
