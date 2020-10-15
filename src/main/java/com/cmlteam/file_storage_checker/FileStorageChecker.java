@@ -1,13 +1,16 @@
 package com.cmlteam.file_storage_checker;
 
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
 
 import javax.annotation.PostConstruct;
 
-@Component
+@AllArgsConstructor
 public class FileStorageChecker {
+  private final Req req;
+
   @PostConstruct
   void run() {
-    System.out.println(123);
+    Resp resp = req.get("http://localhost:8080/file");
+    System.out.println(resp);
   }
 }
