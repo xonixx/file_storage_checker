@@ -15,7 +15,7 @@ public class FileStorageChecker {
     Resp resp = req.get(ENDPOINT);
     System.out.println(resp);
 
-    Resp resp1 = req.post(ENDPOINT, JsonUtil.json().add("name", "ZZZZ").add("size", 123));
+    Resp resp1 = req.post(ENDPOINT, JsonUtil.json().add("name", "ZZZZ.txt").add("size", 123));
 
     System.out.println(resp1);
 
