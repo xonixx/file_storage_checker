@@ -1,5 +1,6 @@
 package com.cmlteam.file_storage_checker;
 
+import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.AllArgsConstructor;
 
 import javax.annotation.PostConstruct;
@@ -17,11 +18,19 @@ public class FileStorageChecker {
 
   @PostConstruct
   void run() {
+    setup();
+
     try {
       runSuit();
     } finally {
       deleteAllFilesFromES();
     }
+  }
+
+  private void setup() {
+    req.addErrHandler(
+        (httpMethod, url, resp, errMsg) ->
+            errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp));
   }
 
   private void deleteAllFilesFromES() {
@@ -37,27 +46,68 @@ public class FileStorageChecker {
   }
 
   private void runSuit() {
-    req.addErrHandler(
-        (httpMethod, url, resp, errMsg) ->
-            errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp));
-
     checkCountAfterStart();
+    checkCorrectFilesAddition();
+    checkIncorrectFilesAddition();
 
-    checkCorrectlyAddedFile("zzzz.txt", 123);
-    checkCorrectlyAddedFile("ZZZZ.txt", 123);
-    checkCorrectlyAddedFile("тЕсТ.txt", 123);
-    checkCorrectlyAddedFile("test", 123);
-    checkCorrectlyAddedFile("test.txt", 0);
+    reportCollectedErrors();
+  }
 
+  private void reportCollectedErrors() {
     System.out.println();
     System.out.println(errors.report());
     System.out.println();
   }
 
+  private void checkCorrectFilesAddition() {
+    checkCorrectlyAddedFile("zzzz.txt", 123);
+    checkCorrectlyAddedFile("ZZZZ.txt", 123);
+    checkCorrectlyAddedFile("тЕсТ.txt", 123);
+    checkCorrectlyAddedFile("test", 123);
+    checkCorrectlyAddedFile("test.txt", 0);
+  }
+
+  private void checkIncorrectFilesAddition() {
+    checkIncorrectlyAddedFile("aaa.txt", null);
+    checkIncorrectlyAddedFile("aaa.txt", -123);
+    checkIncorrectlyAddedFile(null, 123);
+    checkIncorrectlyAddedFile(null, null);
+  }
+
+  private void checkIncorrectlyAddedFile(String fileName, Integer fileSize) {
+    JsonUtil.JsonBuilder file = json();
+    if (fileName != null) file.add("name", fileName);
+    if (fileSize != null) file.add("size", fileSize);
+
+    Resp resp = req.post(endpoint, file);
+
+    List<String> err = new ArrayList<>();
+
+    int status = resp.getStatus();
+
+    if (status != 400) {
+      err.add(
+          "File '"
+              + fileName
+              + "' of size "
+              + fileSize
+              + " should cause status 400 but resulted in status="
+              + status);
+      err.add("" + resp.getJson());
+    }
+
+    if (!err.isEmpty()) {
+      errors.addError(String.join(", ", err), resp);
+    }
+  }
+
   private void checkCorrectlyAddedFile(String fileName, int fileSize) {
     Resp resp = req.post(endpoint, json().add("name", fileName).add("size", fileSize));
+
     List<String> err = new ArrayList<>();
+
     int status = resp.getStatus();
+
     if (status != 200 && status != 201) {
       err.add(
           "File '"
@@ -68,6 +118,7 @@ public class FileStorageChecker {
               + status);
       err.add("" + resp.getJson());
     }
+
     if (!err.isEmpty()) {
       errors.addError(String.join(", ", err), resp);
     }
