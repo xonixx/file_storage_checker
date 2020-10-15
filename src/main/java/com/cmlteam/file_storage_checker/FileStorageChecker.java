@@ -3,8 +3,6 @@ package com.cmlteam.file_storage_checker;
 import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.AllArgsConstructor;
 
-import javax.annotation.PostConstruct;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,11 +10,11 @@ import static com.cmlteam.file_storage_checker.util.JsonUtil.json;
 
 @AllArgsConstructor
 public class FileStorageChecker {
-  private final Req req;
-  private final String endpoint = "http://localhost:8080/file";
   private final Errors errors = new Errors();
+  private final Req req;
+  private final String endpoint;
+  private final String esIndexName;
 
-  @PostConstruct
   void run() {
     setup();
 
@@ -37,7 +35,7 @@ public class FileStorageChecker {
     Resp resp =
         new Req()
             .post(
-                "http://localhost:9200/file/_delete_by_query",
+                "http://localhost:9200/" + esIndexName + "/_delete_by_query",
                 json().add("query", json().add("match_all", json())));
 
     if (resp.getStatus() != 200) {

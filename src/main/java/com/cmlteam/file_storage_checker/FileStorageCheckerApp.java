@@ -8,7 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.cmlteam")
-public class Application {
+public class FileStorageCheckerApp {
 
   @Bean
   RestTemplate restTemplate() {
@@ -21,11 +21,11 @@ public class Application {
   }
 
   @Bean
-  FileStorageChecker fileStorageChecker(Req req) {
-    return new FileStorageChecker(req);
+  FileStorageCheckerCli fileStorageCheckerCli(Req req) {
+    return new FileStorageCheckerCli(req);
   }
 
   public static void main(String[] args) {
-    SpringApplication.run(Application.class, args);
+    SpringApplication.run(FileStorageCheckerApp.class, args);
   }
 }
