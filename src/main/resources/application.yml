@@ -3,24 +3,6 @@ server:
   port: 8080
 
 spring:
-  datasource:
-    #url: jdbc:mysql://localhost:23306/file_storage_checker?useUnicode=true&rewriteBatchedStatements=true&useSSL=false
-    url: jdbc:postgresql://localhost:25432/file_storage_checker
-    username: file_storage_checker
-    password: file_storage_checker
-    type: com.zaxxer.hikari.HikariDataSource
-    hikari:
-      # https://github.com/brettwooldridge/HikariCP#configuration-knobs-baby
-      maximum-pool-size: 100
-      minimum-idle: 40
-  jpa:
-    #database: mysql
-    #database-platform: org.hibernate.dialect.MySQL8Dialect
-    database: postgresql
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
-    hibernate:
-      ddl-auto: update
-
   liquibase:
     enabled: false # manual
     change-log: classpath:changelog.xml
@@ -36,6 +18,9 @@ spring:
         smtp:
           socketFactory:
             class: "javax.net.ssl.SSLSocketFactory"
+
+  main:
+    web-application-type: NONE
 
 #logging:
 #  level:
