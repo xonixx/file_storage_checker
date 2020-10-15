@@ -4,11 +4,16 @@ import lombok.AllArgsConstructor;
 
 import javax.annotation.PostConstruct;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.cmlteam.file_storage_checker.util.JsonUtil.json;
 
 @AllArgsConstructor
 public class FileStorageChecker {
   private final Req req;
+  private final String endpoint = "http://localhost:8080/file";
+  private final Errors errors = new Errors();
 
   @PostConstruct
   void run() {
@@ -32,34 +37,49 @@ public class FileStorageChecker {
   }
 
   private void runSuit() {
-    String ENDPOINT = "http://localhost:8080/file";
-
-    Errors errors = new Errors();
-
     req.addErrHandler(
-        (httpMethod, url, resp, errMsg) -> {
-          errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp);
-        });
+        (httpMethod, url, resp, errMsg) ->
+            errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp));
 
-    Resp resp = req.get(ENDPOINT);
+    checkCountAfterStart();
+
+    checkCorrectlyAddedFile("zzzz.txt", 123);
+    checkCorrectlyAddedFile("ZZZZ.txt", 123);
+    checkCorrectlyAddedFile("тЕсТ.txt", 123);
+    checkCorrectlyAddedFile("test", 123);
+    checkCorrectlyAddedFile("test.txt", 0);
+
+    System.out.println();
+    System.out.println(errors.report());
+    System.out.println();
+  }
+
+  private void checkCorrectlyAddedFile(String fileName, int fileSize) {
+    Resp resp = req.post(endpoint, json().add("name", fileName).add("size", fileSize));
+    List<String> err = new ArrayList<>();
+    int status = resp.getStatus();
+    if (status != 200 && status != 201) {
+      err.add(
+          "File '"
+              + fileName
+              + "' of size "
+              + fileSize
+              + " should save correctly but resulted in status="
+              + status);
+      err.add("" + resp.getJson());
+    }
+    if (!err.isEmpty()) {
+      errors.addError(String.join(", ", err), resp);
+    }
+  }
+
+  private void checkCountAfterStart() {
+    Resp resp = req.get(endpoint);
 
     int total = (Integer) resp.getJson().get("total");
 
     if (total > 0) {
       errors.addError("The storage contains some files just after start - should be empty", resp);
     }
-
-    System.out.println(resp);
-
-    Resp resp1 = req.post(ENDPOINT, json().add("name", "zzzz.txt").add("size", 123));
-
-    System.out.println(resp1);
-
-    Resp resp3 = req.get(ENDPOINT);
-    System.out.println(resp3);
-
-    System.out.println();
-    System.out.println(errors.report());
-    System.out.println();
   }
 }
