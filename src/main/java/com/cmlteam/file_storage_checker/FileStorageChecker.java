@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.cmlteam.file_storage_checker.util.JsonUtil.json;
 
@@ -48,7 +49,53 @@ public class FileStorageChecker {
     checkCorrectFilesAddition();
     checkIncorrectFilesAddition();
 
+    deleteAllFilesFromES();
+    checkTagsAddition();
+
     reportCollectedErrors();
+  }
+
+  private void checkTagsAddition() {
+    Resp resp =
+        checkSuccess(
+            "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
+    String id = getId(resp);
+    if (id != null) {
+      checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", List.of("tag1", "tag2")));
+      checkSuccess("list files after tags addition", req.get(endpoint));
+    }
+  }
+
+  Resp checkSuccess(String msg, Resp resp) {
+    List<String> err = new ArrayList<>();
+
+    int status = resp.getStatus();
+
+    if (status != 200) {
+      err.add(msg + " should execute correctly but resulted in status=" + status);
+      err.add("" + resp.getJson());
+    }
+
+    if (!err.isEmpty()) {
+      errors.addError(String.join(", ", err), resp);
+    }
+    return resp;
+  }
+
+  private String getId(Resp resp) {
+    Map<String, ?> json = resp.getJson();
+    if (json == null) {
+      return null;
+    }
+    Object id = json.get("id");
+    if (id == null) {
+      id = json.get("ID");
+    }
+    if (!(id instanceof String)) {
+      errors.addError("ID of created file is not a String: " + id, resp);
+      return null;
+    }
+    return (String) id;
   }
 
   private void reportCollectedErrors() {
@@ -116,6 +163,8 @@ public class FileStorageChecker {
               + status);
       err.add("" + resp.getJson());
     }
+
+    // TODO check success + ID
 
     if (!err.isEmpty()) {
       errors.addError(String.join(", ", err), resp);

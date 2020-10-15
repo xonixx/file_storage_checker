@@ -38,7 +38,7 @@ public class Req {
         HttpMethod.GET, url, () -> restTemplate.getForEntity(url, String.class, uriVariables));
   }
 
-  Resp post(String url, JsonUtil.JsonBuilder body, Object... uriVariables) {
+  Resp post(String url, Object body, Object... uriVariables) {
     return exec(
         HttpMethod.POST,
         url,
