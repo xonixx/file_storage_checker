@@ -46,17 +46,12 @@ public class Req {
         uriVariables);
   }
 
-  @FunctionalInterface
-  private interface Call {
-    ResponseEntity<String> call();
-  }
-
   private Resp exec(
       HttpMethod method, String url, RequestEntity<?> requestEntity, Object... uriVariables) {
     ResponseEntity<String> responseEntity;
-    Call call = () -> restTemplate.exchange(url, method, requestEntity, String.class, uriVariables);
     try {
-      responseEntity = call.call();
+      responseEntity =
+          restTemplate.exchange(url, method, requestEntity, String.class, uriVariables);
     } catch (RestClientResponseException e) {
       responseEntity =
           ResponseEntity.status(e.getRawStatusCode())

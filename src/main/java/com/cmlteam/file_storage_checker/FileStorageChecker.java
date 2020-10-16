@@ -2,6 +2,7 @@ package com.cmlteam.file_storage_checker;
 
 import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +34,9 @@ public class FileStorageChecker {
             errors.addError(httpMethod.name() + " " + url + " : " + errMsg, resp));
   }
 
+  @SneakyThrows
   private void deleteAllFilesFromES() {
+    Thread.sleep(1000); // TODO
     Resp resp =
         new Req()
             .post(
