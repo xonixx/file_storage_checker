@@ -9,6 +9,6 @@ public class FileStorageCheckerCli implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    new FileStorageChecker(req, "http://localhost:8080/file", "file").run();
+    new FileStorageChecker(req, args[0], args[1]).run();
   }
 }
