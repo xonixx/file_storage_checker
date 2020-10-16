@@ -67,7 +67,7 @@ public class FileStorageChecker {
 
     Resp resp =
         checkSuccess(
-            "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
+            "add file", req.post(endpoint, json().add("name", "file.xyz").add("size", 123)));
     String id = getId(resp);
     if (id != null) {
       List<String> tagsList = List.of("tag1", "tag2");
@@ -118,7 +118,7 @@ public class FileStorageChecker {
 
     Resp resp =
         checkSuccess(
-            "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
+            "add file", req.post(endpoint, json().add("name", "file.xyz").add("size", 123)));
     String id = getId(resp);
     if (id != null) {
       List<String> tagsList = List.of("tag", "tag");
@@ -136,10 +136,10 @@ public class FileStorageChecker {
 
     Resp resp1 =
         checkSuccess(
-            "add file 1", req.post(endpoint, json().add("name", "file1.txt").add("size", 123)));
+            "add file 1", req.post(endpoint, json().add("name", "file1.xyz").add("size", 123)));
     Resp resp2 =
         checkSuccess(
-            "add file 2", req.post(endpoint, json().add("name", "file2.txt").add("size", 123)));
+            "add file 2", req.post(endpoint, json().add("name", "file2.xyz").add("size", 123)));
     String id1 = getId(resp1);
     String id2 = getId(resp2);
     if (id1 != null) {
@@ -247,16 +247,16 @@ public class FileStorageChecker {
   }
 
   private void checkCorrectFilesAddition() {
-    checkCorrectlyAddedFile("zzzz.txt", 123);
-    checkCorrectlyAddedFile("ZZZZ.txt", 123);
-    checkCorrectlyAddedFile("тЕсТ.txt", 123);
+    checkCorrectlyAddedFile("zzzz.xyz", 123);
+    checkCorrectlyAddedFile("ZZZZ.xyz", 123);
+    checkCorrectlyAddedFile("тЕсТ.xyz", 123);
     checkCorrectlyAddedFile("test", 123);
-    checkCorrectlyAddedFile("test.txt", 0);
+    checkCorrectlyAddedFile("test.xyz", 0);
   }
 
   private void checkIncorrectFilesAddition() {
-    checkIncorrectlyAddedFile("aaa.txt", null);
-    checkIncorrectlyAddedFile("aaa.txt", -123);
+    checkIncorrectlyAddedFile("aaa.xyz", null);
+    checkIncorrectlyAddedFile("aaa.xyz", -123);
     checkIncorrectlyAddedFile(null, 123);
     checkIncorrectlyAddedFile(null, null);
   }
