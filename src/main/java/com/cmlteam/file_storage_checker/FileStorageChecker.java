@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.cmlteam.file_storage_checker.util.JsonUtil.json;
+import static com.cmlteam.file_storage_checker.util.JsonUtil.jsonList;
 
 @AllArgsConstructor
 public class FileStorageChecker {
@@ -185,11 +186,13 @@ public class FileStorageChecker {
 
   private Resp addTagsCheckingSuccess(String id, List<String> tagsList) {
     // need this to show an error
-    Resp resp = checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
+    Resp resp =
+        checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", jsonList(tagsList)));
     if (tagsAsFile) {
       resp =
           checkSuccess(
-              "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
+              "add tags",
+              req.post(endpoint + "/" + id + "/tags", json().add("tags", jsonList(tagsList))));
     }
     return resp;
   }
@@ -197,7 +200,7 @@ public class FileStorageChecker {
   private Resp addTags(String id, List<String> tagsList) {
     Resp resp;
     if (!tagsAsFile) {
-      resp = req.post(endpoint + "/" + id + "/tags", tagsList);
+      resp = req.post(endpoint + "/" + id + "/tags", jsonList(tagsList));
     } else {
       resp = req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList));
     }
@@ -259,7 +262,7 @@ public class FileStorageChecker {
   }
 
   private void checkIncorrectlyAddedFile(String fileName, Integer fileSize) {
-    JsonUtil.JsonBuilder file = json();
+    JsonUtil.JsonMapBuilder file = json();
     if (fileName != null) file.add("name", fileName);
     if (fileSize != null) file.add("size", fileSize);
 

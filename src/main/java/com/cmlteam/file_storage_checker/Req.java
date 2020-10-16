@@ -1,5 +1,6 @@
 package com.cmlteam.file_storage_checker;
 
+import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -36,7 +37,7 @@ public class Req {
     return exec(HttpMethod.GET, url, RequestEntity.get(URI.create(url)).build(), uriVariables);
   }
 
-  Resp post(String url, Object body, Object... uriVariables) {
+  Resp post(String url, JsonUtil.JsonBuilder body, Object... uriVariables) {
     return exec(
         HttpMethod.POST,
         url,

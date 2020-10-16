@@ -7,10 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 @Slf4j
 public final class JsonUtil {
@@ -107,17 +104,26 @@ public final class JsonUtil {
     }
   }
 
-  public static class JsonBuilder {
-    private Map<String, Object> map = new LinkedHashMap<>();
+  public interface JsonBuilder {
+    Object getValue();
+  }
 
-    public JsonBuilder add(String key, Object value) {
+  public static class JsonMapBuilder implements JsonBuilder {
+    private final Map<String, Object> map = new LinkedHashMap<>();
+
+    public JsonMapBuilder add(String key, Object value) {
       map.put(key, value);
       return this;
     }
 
-    public JsonBuilder add(String key, JsonBuilder value) {
-      map.put(key, value.map);
+    public JsonMapBuilder add(String key, JsonBuilder value) {
+      map.put(key, value.getValue());
       return this;
+    }
+
+    @Override
+    public Object getValue() {
+      return map;
     }
 
     @Override
@@ -126,7 +132,42 @@ public final class JsonUtil {
     }
   }
 
-  public static JsonBuilder json() {
-    return new JsonBuilder();
+  public static class JsonListBuilder implements JsonBuilder {
+    private final List<Object> list = new ArrayList<>();
+
+    public JsonListBuilder add(Object value) {
+      list.add(value);
+      return this;
+    }
+
+    public JsonListBuilder add(JsonBuilder value) {
+      list.add(value.getValue());
+      return this;
+    }
+
+    @Override
+    public Object getValue() {
+      return list;
+    }
+
+    @Override
+    public String toString() {
+      return toJsonString(list);
+    }
+  }
+
+  public static JsonMapBuilder json() {
+    return new JsonMapBuilder();
+  }
+
+  public static JsonListBuilder jsonList(List<?> values) {
+    JsonListBuilder l = jsonList();
+    for (Object value : values) {
+      l.add(value);
+    }
+    return l;
+  }
+  public static JsonListBuilder jsonList() {
+    return new JsonListBuilder();
   }
 }
