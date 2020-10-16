@@ -52,6 +52,7 @@ public class FileStorageChecker {
 
     checkTagsAddition();
     checkTagsDuplication();
+    checkTagsSearchByAnd();
 
     reportCollectedErrors();
   }
@@ -113,12 +114,57 @@ public class FileStorageChecker {
     }
   }
 
-  private List getTags(Resp resp1) {
-    Map<String, ?> json = resp1.getJson();
+  private void checkTagsSearchByAnd() {
+    deleteAllFilesFromES();
+
+    Resp resp1 =
+        checkSuccess(
+            "add file 1", req.post(endpoint, json().add("name", "file1.txt").add("size", 123)));
+    Resp resp2 =
+        checkSuccess(
+            "add file 2", req.post(endpoint, json().add("name", "file2.txt").add("size", 123)));
+    String id1 = getId(resp1);
+    String id2 = getId(resp2);
+    if (id1 != null) {
+      List<String> twoTags = List.of("aaa", "bbb");
+      addTags(id1, twoTags);
+      addTags(id2, List.of("aaa"));
+      String tag = "zzz";
+      Resp respAll = checkSuccess("list files after tags addition", req.get(endpoint));
+      if (getTotal(respAll) != 2) {
+        errors.addError("Should return all records (2) ", respAll);
+      }
+      Resp respUnknownTag =
+          checkSuccess("list files after tags addition", req.get(endpoint + "?tags=" + tag));
+      if (getTotal(respUnknownTag) != 0) {
+        errors.addError("Should return empty result for non-existent tag " + tag, respUnknownTag);
+      }
+      Resp respAnd =
+          checkSuccess(
+              "list files after tags addition",
+              req.get(endpoint + "?tags=" + String.join(",", twoTags)));
+      int totalAnd = getTotal(respAnd);
+      if (totalAnd != 1) {
+        errors.addError(
+            "Should apply AND logic when searching by tags. In your case it's "
+                + (totalAnd == 2 ? "OR" : "smth other"),
+            respAnd);
+      }
+    }
+  }
+
+  private List getTags(Resp resp) {
+    Map<String, ?> json = resp.getJson();
 
     List page = (List) json.get("page");
     Map file = (Map) page.get(0);
     return (List) file.get("tags");
+  }
+
+  private int getTotal(Resp resp) {
+    Map<String, ?> json = resp.getJson();
+
+    return (int) json.get("total");
   }
 
   private void addTags(String id, List<String> tagsList) {
