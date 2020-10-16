@@ -51,6 +51,7 @@ public class FileStorageChecker {
     checkIncorrectFilesAddition();
 
     checkTagsAddition();
+    checkTagsDuplication();
 
     reportCollectedErrors();
   }
@@ -63,7 +64,6 @@ public class FileStorageChecker {
             "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
     String id = getId(resp);
     if (id != null) {
-      // need this to show an error
       List<String> tagsList = List.of("tag1", "tag2");
       addTags(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
@@ -89,7 +89,26 @@ public class FileStorageChecker {
       correct.addAll(tagsList);
       correct.addAll(tagsList34);
       if (!correct.equals(tags3)) {
-        errors.addError("Tags should be appended to existing, not replace them. Should be " + correct, resp3);
+        errors.addError(
+            "Tags should be appended to existing, not replace them. Should be " + correct, resp3);
+      }
+    }
+  }
+
+  private void checkTagsDuplication() {
+    deleteAllFilesFromES();
+
+    Resp resp =
+        checkSuccess(
+            "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
+    String id = getId(resp);
+    if (id != null) {
+      List<String> tagsList = List.of("tag", "tag");
+      addTags(id, tagsList);
+      Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
+      List tags = getTags(resp1);
+      if (tagsList.equals(tags)) {
+        errors.addError("Tags should not duplicate after addition " + tagsList, resp1);
       }
     }
   }
@@ -103,6 +122,7 @@ public class FileStorageChecker {
   }
 
   private void addTags(String id, List<String> tagsList) {
+    // need this to show an error
     checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
     if (tagsAsFile) {
       checkSuccess(
@@ -117,7 +137,6 @@ public class FileStorageChecker {
 
     if (status != 200) {
       err.add(msg + " should execute correctly but resulted in status=" + status);
-      err.add("" + resp.getJson());
     }
 
     if (!err.isEmpty()) {
