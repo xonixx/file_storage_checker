@@ -65,20 +65,48 @@ public class FileStorageChecker {
     if (id != null) {
       // need this to show an error
       List<String> tagsList = List.of("tag1", "tag2");
-      checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
-      if (tagsAsFile) {
-        checkSuccess(
-            "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
-      }
+      addTags(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
-      Map<String, ?> json = resp1.getJson();
-
-      List page = (List) json.get("page");
-      Map file = (Map) page.get(0);
-      List tags = (List) file.get("tags");
+      List tags = getTags(resp1);
       if (!tagsList.equals(tags)) {
         errors.addError("Incorrect tags returned after addition of " + tagsList, resp1);
       }
+
+      // repeat
+      addTags(id, tagsList);
+      Resp resp2 = checkSuccess("list files after tags addition", req.get(endpoint));
+      List tags2 = getTags(resp2);
+      if (!tagsList.equals(tags2)) {
+        errors.addError("Tags should not duplicate on repeating addition of " + tagsList, resp2);
+      }
+
+      // check append
+      List<String> tagsList34 = List.of("tag3", "tag4");
+      addTags(id, tagsList34);
+      Resp resp3 = checkSuccess("list files after tags addition", req.get(endpoint));
+      List tags3 = getTags(resp3);
+      List<String> correct = new ArrayList<>();
+      correct.addAll(tagsList);
+      correct.addAll(tagsList34);
+      if (!correct.equals(tags3)) {
+        errors.addError("Tags should be appended to existing, not replace them. Should be " + correct, resp3);
+      }
+    }
+  }
+
+  private List getTags(Resp resp1) {
+    Map<String, ?> json = resp1.getJson();
+
+    List page = (List) json.get("page");
+    Map file = (Map) page.get(0);
+    return (List) file.get("tags");
+  }
+
+  private void addTags(String id, List<String> tagsList) {
+    checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
+    if (tagsAsFile) {
+      checkSuccess(
+          "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
     }
   }
 
