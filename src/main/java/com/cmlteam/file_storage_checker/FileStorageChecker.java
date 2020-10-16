@@ -15,6 +15,7 @@ public class FileStorageChecker {
   private final Req req;
   private final String endpoint;
   private final String esIndexName;
+  private final boolean tagsAsFile;
 
   void run() {
     setup();
@@ -49,20 +50,35 @@ public class FileStorageChecker {
     checkCorrectFilesAddition();
     checkIncorrectFilesAddition();
 
-    deleteAllFilesFromES();
     checkTagsAddition();
 
     reportCollectedErrors();
   }
 
   private void checkTagsAddition() {
+    deleteAllFilesFromES();
+
     Resp resp =
         checkSuccess(
             "add file", req.post(endpoint, json().add("name", "file.txt").add("size", 123)));
     String id = getId(resp);
     if (id != null) {
-      checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", List.of("tag1", "tag2")));
-      checkSuccess("list files after tags addition", req.get(endpoint));
+      // need this to show an error
+      List<String> tagsList = List.of("tag1", "tag2");
+      checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
+      if (tagsAsFile) {
+        checkSuccess(
+            "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
+      }
+      Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
+      Map<String, ?> json = resp1.getJson();
+
+      List page = (List) json.get("page");
+      Map file = (Map) page.get(0);
+      List tags = (List) file.get("tags");
+      if (!tagsList.equals(tags)) {
+        errors.addError("Incorrect tags returned after addition of " + tagsList, resp1);
+      }
     }
   }
 
