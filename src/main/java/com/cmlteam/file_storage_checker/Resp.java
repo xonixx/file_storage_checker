@@ -3,6 +3,7 @@ package com.cmlteam.file_storage_checker;
 import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.Getter;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
@@ -10,13 +11,15 @@ import java.util.List;
 import java.util.Map;
 
 public class Resp {
+  private final RequestEntity<?> requestEntity;
   private final ResponseEntity<String> responseEntity;
 
   @Getter private final Map<String, ?> json;
 
   @Getter private final List<String> errors = new ArrayList<>();
 
-  public Resp(ResponseEntity<String> responseEntity) {
+  public Resp(RequestEntity<?> requestEntity, ResponseEntity<String> responseEntity) {
+    this.requestEntity = requestEntity;
     this.responseEntity = responseEntity;
     Map<String, ?> json1;
     try {
@@ -40,6 +43,10 @@ public class Resp {
 
   @Override
   public String toString() {
-    return responseEntity.toString();
+    return "----- REQUEST -----\n"
+        + requestEntity.toString()
+        + "\n----- RESPONSE -----\n"
+        + responseEntity.toString()
+        + "\n--------------------";
   }
 }

@@ -14,8 +14,7 @@ public class Errors {
   void addError(String msg, Resp resp) {
     if (!uniqueErrors.contains(msg)) {
       uniqueErrors.add(msg);
-      String line = "\n------------\n";
-      errorMsgs.add((++i) + ". " + msg + ". Response was: " + line + resp + line);
+      errorMsgs.add((++i) + ". " + msg + ":\n\n" + resp + "\n");
     }
   }
 

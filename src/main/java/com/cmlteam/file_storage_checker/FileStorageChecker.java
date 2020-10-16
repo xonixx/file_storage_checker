@@ -84,12 +84,14 @@ public class FileStorageChecker {
 
   private String getId(Resp resp) {
     Map<String, ?> json = resp.getJson();
+    Object id;
     if (json == null) {
-      return null;
-    }
-    Object id = json.get("id");
-    if (id == null) {
-      id = json.get("ID");
+      id = null;
+    } else {
+      id = json.get("id");
+      if (id == null) {
+        id = json.get("ID");
+      }
     }
     if (!(id instanceof String)) {
       errors.addError("ID of created file is not a String: " + id, resp);

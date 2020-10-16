@@ -1,6 +1,5 @@
 package com.cmlteam.file_storage_checker;
 
-import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -34,22 +33,17 @@ public class Req {
   }
 
   Resp get(String url, Object... uriVariables) {
-    return exec(
-        HttpMethod.GET, url, () -> restTemplate.getForEntity(url, String.class, uriVariables));
+    return exec(HttpMethod.GET, url, RequestEntity.get(URI.create(url)).build(), uriVariables);
   }
 
   Resp post(String url, Object body, Object... uriVariables) {
     return exec(
         HttpMethod.POST,
         url,
-        () ->
-            restTemplate.postForEntity(
-                url,
-                RequestEntity.post(URI.create(url))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(body.toString()),
-                String.class,
-                uriVariables));
+        RequestEntity.post(URI.create(url))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(body.toString()),
+        uriVariables);
   }
 
   @FunctionalInterface
@@ -57,8 +51,10 @@ public class Req {
     ResponseEntity<String> call();
   }
 
-  private Resp exec(HttpMethod httpMethod, String url, Call call) {
+  private Resp exec(
+      HttpMethod method, String url, RequestEntity<?> requestEntity, Object... uriVariables) {
     ResponseEntity<String> responseEntity;
+    Call call = () -> restTemplate.exchange(url, method, requestEntity, String.class, uriVariables);
     try {
       responseEntity = call.call();
     } catch (RestClientResponseException e) {
@@ -67,10 +63,10 @@ public class Req {
               .headers(e.getResponseHeaders())
               .body(e.getResponseBodyAsString());
     }
-    Resp resp = new Resp(responseEntity);
+    Resp resp = new Resp(requestEntity, responseEntity);
     for (ErrHandler errorHandler : errorHandlers) {
       for (String error : resp.getErrors()) {
-        errorHandler.handleError(httpMethod, url, resp, error);
+        errorHandler.handleError(method, url, resp, error);
       }
     }
     return resp;
