@@ -51,6 +51,7 @@ public class FileStorageChecker {
     checkIncorrectFilesAddition();
 
     checkTagsAddition();
+    checkTagsAdditionNonExistentFile();
     checkTagsDuplication();
     checkTagsSearchByAnd();
 
@@ -66,7 +67,7 @@ public class FileStorageChecker {
     String id = getId(resp);
     if (id != null) {
       List<String> tagsList = List.of("tag1", "tag2");
-      addTags(id, tagsList);
+      addTagsCheckingSuccess(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
       List tags = getTags(resp1);
       if (!tagsList.equals(tags)) {
@@ -74,7 +75,7 @@ public class FileStorageChecker {
       }
 
       // repeat
-      addTags(id, tagsList);
+      addTagsCheckingSuccess(id, tagsList);
       Resp resp2 = checkSuccess("list files after tags addition", req.get(endpoint));
       List tags2 = getTags(resp2);
       if (!tagsList.equals(tags2)) {
@@ -83,7 +84,7 @@ public class FileStorageChecker {
 
       // check append
       List<String> tagsList34 = List.of("tag3", "tag4");
-      addTags(id, tagsList34);
+      addTagsCheckingSuccess(id, tagsList34);
       Resp resp3 = checkSuccess("list files after tags addition", req.get(endpoint));
       List tags3 = getTags(resp3);
       List<String> correct = new ArrayList<>();
@@ -96,6 +97,18 @@ public class FileStorageChecker {
     }
   }
 
+  private void checkTagsAdditionNonExistentFile() {
+    deleteAllFilesFromES();
+
+    List<String> tagsList = List.of("tag1", "tag2");
+    Resp resp = addTags("non-existent-file-1231233", tagsList);
+    int status = resp.getStatus();
+    if (status != 404) {
+      errors.addError(
+          "Should not return status " + status + " when adding tags to non-existent file", resp);
+    }
+  }
+
   private void checkTagsDuplication() {
     deleteAllFilesFromES();
 
@@ -105,7 +118,7 @@ public class FileStorageChecker {
     String id = getId(resp);
     if (id != null) {
       List<String> tagsList = List.of("tag", "tag");
-      addTags(id, tagsList);
+      addTagsCheckingSuccess(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
       List tags = getTags(resp1);
       if (tagsList.equals(tags)) {
@@ -127,8 +140,8 @@ public class FileStorageChecker {
     String id2 = getId(resp2);
     if (id1 != null) {
       List<String> twoTags = List.of("aaa", "bbb");
-      addTags(id1, twoTags);
-      addTags(id2, List.of("aaa"));
+      addTagsCheckingSuccess(id1, twoTags);
+      addTagsCheckingSuccess(id2, List.of("aaa"));
       String tag = "zzz";
       Resp respAll = checkSuccess("list files after tags addition", req.get(endpoint));
       if (getTotal(respAll) != 2) {
@@ -167,13 +180,25 @@ public class FileStorageChecker {
     return (int) json.get("total");
   }
 
-  private void addTags(String id, List<String> tagsList) {
+  private Resp addTagsCheckingSuccess(String id, List<String> tagsList) {
     // need this to show an error
-    checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
+    Resp resp = checkSuccess("add tags", req.post(endpoint + "/" + id + "/tags", tagsList));
     if (tagsAsFile) {
-      checkSuccess(
-          "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
+      resp =
+          checkSuccess(
+              "add tags", req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList)));
     }
+    return resp;
+  }
+
+  private Resp addTags(String id, List<String> tagsList) {
+    Resp resp;
+    if (!tagsAsFile) {
+      resp = req.post(endpoint + "/" + id + "/tags", tagsList);
+    } else {
+      resp = req.post(endpoint + "/" + id + "/tags", json().add("tags", tagsList));
+    }
+    return resp;
   }
 
   Resp checkSuccess(String msg, Resp resp) {
