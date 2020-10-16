@@ -313,6 +313,10 @@ public class FileStorageChecker {
   private void checkCountAfterStart() {
     Resp resp = req.get(endpoint);
 
+    if (resp.getStatus() != 200) {
+      errors.addError("Error checking count", resp);
+      return;
+    }
     int total = (Integer) resp.getJson().get("total");
 
     if (total > 0) {
