@@ -9,6 +9,6 @@ public class FileStorageCheckerCli implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    new FileStorageChecker(req, args[0], args[1], Boolean.getBoolean("tagsAsFile")).run();
+    new FileStorageChecker(req, args[0], args[1], Boolean.getBoolean("tagsAsFile"), 0).run();
   }
 }

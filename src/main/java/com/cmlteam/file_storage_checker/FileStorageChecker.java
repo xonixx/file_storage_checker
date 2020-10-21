@@ -19,6 +19,7 @@ public class FileStorageChecker {
   private final String endpoint;
   private final String esIndexName;
   private final boolean tagsAsFile;
+  private int checksCount;
 
   void run() {
     setup();
@@ -96,6 +97,8 @@ public class FileStorageChecker {
   }
 
   private void checkFileToAutoAssignTag(String fileName, String shouldHaveTag) {
+    checksCount++;
+
     deleteAllFilesFromES();
 
     checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", 123)));
@@ -122,6 +125,7 @@ public class FileStorageChecker {
             "add file", req.post(endpoint, json().add("name", "file.xyz").add("size", 123)));
     String id = getId(resp);
     if (id != null) {
+      checksCount++;
       List<String> tagsList = List.of("tag1", "tag2");
       addTagsCheckingSuccess(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
@@ -131,6 +135,7 @@ public class FileStorageChecker {
       }
 
       // repeat
+      checksCount++;
       addTagsCheckingSuccess(id, tagsList);
       Resp resp2 = checkSuccess("list files after tags addition", req.get(endpoint));
       List tags2 = getTags(resp2);
@@ -139,6 +144,7 @@ public class FileStorageChecker {
       }
 
       // check append
+      checksCount++;
       List<String> tagsList34 = List.of("tag3", "tag4");
       addTagsCheckingSuccess(id, tagsList34);
       Resp resp3 = checkSuccess("list files after tags addition", req.get(endpoint));
@@ -154,6 +160,8 @@ public class FileStorageChecker {
   }
 
   private void checkTagsAdditionNonExistentFile() {
+    checksCount++;
+
     deleteAllFilesFromES();
 
     List<String> tagsList = List.of("tag1", "tag2");
@@ -166,6 +174,8 @@ public class FileStorageChecker {
   }
 
   private void checkTagsDuplication() {
+    checksCount++;
+
     deleteAllFilesFromES();
 
     Resp resp =
@@ -200,11 +210,15 @@ public class FileStorageChecker {
       addTagsCheckingSuccess(id2, List.of("aaa"));
       String tag = "zzz";
       Resp respAll = checkSuccess("list files after tags addition", req.get(endpoint));
+
+      checksCount++;
       if (getTotal(respAll) != 2) {
         errors.addError("Should return all records (2) ", respAll);
       }
       Resp respUnknownTag =
           checkSuccess("list files after tags addition", req.get(endpoint + "?tags=" + tag));
+
+      checksCount++;
       if (getTotal(respUnknownTag) != 0) {
         errors.addError("Should return empty result for non-existent tag " + tag, respUnknownTag);
       }
@@ -213,6 +227,8 @@ public class FileStorageChecker {
               "list files after tags addition",
               req.get(endpoint + "?tags=" + String.join(",", twoTags)));
       int totalAnd = getTotal(respAnd);
+
+      checksCount++;
       if (totalAnd != 1) {
         errors.addError(
             "Should apply AND logic when searching by tags. In your case it's "
@@ -294,6 +310,7 @@ public class FileStorageChecker {
 
   private void reportCollectedErrors() {
     System.out.println();
+    System.out.println("TOTAL CHECKS: " + checksCount);
     System.out.println(errors.report());
     System.out.println();
   }
@@ -314,6 +331,8 @@ public class FileStorageChecker {
   }
 
   private void checkIncorrectlyAddedFile(String fileName, Integer fileSize) {
+    checksCount++;
+
     JsonUtil.JsonMapBuilder file = json();
     if (fileName != null) file.add("name", fileName);
     if (fileSize != null) file.add("size", fileSize);
@@ -341,6 +360,8 @@ public class FileStorageChecker {
   }
 
   private void checkCorrectlyAddedFile(String fileName, int fileSize) {
+    checksCount++;
+
     Resp resp = req.post(endpoint, json().add("name", fileName).add("size", fileSize));
 
     List<String> err = new ArrayList<>();
@@ -366,6 +387,8 @@ public class FileStorageChecker {
   }
 
   private void checkCountAfterStart() {
+    checksCount++;
+
     Resp resp = req.get(endpoint);
 
     if (resp.getStatus() != 200) {
