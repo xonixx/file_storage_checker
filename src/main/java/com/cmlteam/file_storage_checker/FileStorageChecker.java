@@ -80,6 +80,16 @@ public class FileStorageChecker {
 
   private void checkFileAdditionUndocumentedFields() {
     checksCount++;
+
+    String ID = "111111";
+    FileObj file =
+        createFileAfterDbClean(json().add("name", "file").add("size", 123).add("id", ID));
+
+    if (ID.equals(file.id)) {
+      errors.addError(
+          "File creation endpoint should not use passed 'id' thus allowing to rewrite each file",
+          file.resp);
+    }
   }
 
   @Data
@@ -98,9 +108,13 @@ public class FileStorageChecker {
   }
 
   private FileObj createFileAfterDbClean(String fileName, Integer size) {
+    return createFileAfterDbClean(json().add("name", fileName).add("size", size));
+  }
+
+  private FileObj createFileAfterDbClean(JsonUtil.JsonBuilder json) {
     deleteAllFilesFromES();
 
-    checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", size)));
+    checkSuccess("add file", req.post(endpoint, json));
 
     Resp resp = req.get(endpoint);
 
@@ -110,6 +124,7 @@ public class FileStorageChecker {
       id = (String) file.get("ID");
     }
     Object tags = file.get("tags");
+
     return new FileObj(
         id,
         (String) file.get("name"),
