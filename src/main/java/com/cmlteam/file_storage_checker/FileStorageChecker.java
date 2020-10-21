@@ -57,6 +57,8 @@ public class FileStorageChecker {
     checkCorrectFilesAddition();
     checkIncorrectFilesAddition();
 
+    checkFileAdditionUndocumentedFields();
+
     checkTagsAddition();
     checkTagsAdditionNonExistentFile();
     checkTagsDuplication();
@@ -76,44 +78,68 @@ public class FileStorageChecker {
     reportCollectedErrors();
   }
 
-  @Data
-  static class AutoTagsSupport {
-    private final boolean supports;
-    private final String mp3Tag;
+  private void checkFileAdditionUndocumentedFields() {
+    checksCount++;
   }
 
-  private AutoTagsSupport checkSupportsAutoTags() {
+  @Data
+  static class AutoTagsSupport {
+    final boolean supports;
+    final String mp3Tag;
+  }
+
+  @Data
+  static class FileObj {
+    final String id;
+    final String name;
+    final Integer size;
+    final List<String> tags;
+    final Resp resp;
+  }
+
+  private FileObj createFileAfterDbClean(String fileName, Integer size) {
     deleteAllFilesFromES();
 
-    checkSuccess("add file", req.post(endpoint, json().add("name", "file.mp3").add("size", 123)));
+    checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", size)));
 
     Resp resp = req.get(endpoint);
 
-    Object tags = ((Map) ((List) resp.getJson().get("page")).get(0)).get("tags");
+    Map file = (Map) ((List) resp.getJson().get("page")).get(0);
+    String id = (String) file.get("id");
+    if (id == null) {
+      id = (String) file.get("ID");
+    }
+    Object tags = file.get("tags");
+    return new FileObj(
+        id,
+        (String) file.get("name"),
+        (Integer) file.get("size"),
+        tags instanceof List ? (List) tags : null,
+        resp);
+  }
 
-    return tags instanceof List && !((List<?>) tags).isEmpty()
-        ? new AutoTagsSupport(true, (String) ((List<?>) tags).get(0))
+  private AutoTagsSupport checkSupportsAutoTags() {
+    FileObj fileObj = createFileAfterDbClean("file.mp3", 123);
+    List<String> tags = fileObj.tags;
+
+    return tags != null && !tags.isEmpty()
+        ? new AutoTagsSupport(true, tags.get(0))
         : new AutoTagsSupport(false, null);
   }
 
   private void checkFileToAutoAssignTag(String fileName, String shouldHaveTag) {
     checksCount++;
 
-    deleteAllFilesFromES();
-
-    checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", 123)));
-
-    Resp resp = req.get(endpoint);
-
-    Object tags = ((Map) ((List) resp.getJson().get("page")).get(0)).get("tags");
+    FileObj fileObj = createFileAfterDbClean(fileName, 123);
+    List<String> tags = fileObj.tags;
 
     if (shouldHaveTag != null && !List.of(shouldHaveTag).equals(tags)) {
       errors.addError(
           "File with name '" + fileName + "' should have tag '" + shouldHaveTag + "' auto-assigned",
-          resp);
-    } else if (shouldHaveTag == null && tags instanceof List && !((List<?>) tags).isEmpty()) {
+          fileObj.resp);
+    } else if (shouldHaveTag == null && tags != null && !tags.isEmpty()) {
       errors.addError(
-          "File with name '" + fileName + "' should NOT have any tags auto-assigned", resp);
+          "File with name '" + fileName + "' should NOT have any tags auto-assigned", fileObj.resp);
     }
   }
 
