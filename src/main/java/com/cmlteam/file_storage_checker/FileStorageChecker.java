@@ -82,20 +82,27 @@ public class FileStorageChecker {
   }
 
   private AutoTagsSupport checkSupportsAutoTags() {
-    Resp resp =
-        checkSuccess(
-            "add file", req.post(endpoint, json().add("name", "file.mp3").add("size", 123)));
-    Object tags = resp.getJson().get("tags");
+    deleteAllFilesFromES();
+
+    checkSuccess("add file", req.post(endpoint, json().add("name", "file.mp3").add("size", 123)));
+
+    Resp resp = req.get(endpoint);
+
+    Object tags = ((Map) ((List) resp.getJson().get("page")).get(0)).get("tags");
+
     return tags instanceof List && !((List<?>) tags).isEmpty()
         ? new AutoTagsSupport(true, (String) ((List<?>) tags).get(0))
         : new AutoTagsSupport(false, null);
   }
 
   private void checkFileToAutoAssignTag(String fileName, String shouldHaveTag) {
-    Resp resp =
-        checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", 123)));
+    deleteAllFilesFromES();
 
-    Object tags = resp.getJson().get("tags");
+    checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", 123)));
+
+    Resp resp = req.get(endpoint);
+
+    Object tags = ((Map) ((List) resp.getJson().get("page")).get(0)).get("tags");
 
     if (shouldHaveTag != null && !List.of(shouldHaveTag).equals(tags)) {
       errors.addError(
