@@ -37,11 +37,12 @@ public class FileStorageChecker {
 
   @SneakyThrows
   private void deleteAllFilesFromES() {
-    Thread.sleep(1000); // TODO
     Resp resp =
         new Req()
             .post(
-                "http://localhost:9200/" + esIndexName + "/_delete_by_query",
+                "http://localhost:9200/"
+                    + esIndexName
+                    + "/_delete_by_query?refresh=true&wait_for_completion=true",
                 json().add("query", json().add("match_all", json())));
 
     if (resp.getStatus() != 200) {
