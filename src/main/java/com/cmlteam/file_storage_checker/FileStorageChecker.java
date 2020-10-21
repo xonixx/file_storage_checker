@@ -2,6 +2,7 @@ package com.cmlteam.file_storage_checker;
 
 import com.cmlteam.file_storage_checker.util.JsonUtil;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.SneakyThrows;
 
 import java.util.ArrayList;
@@ -60,7 +61,50 @@ public class FileStorageChecker {
     checkTagsDuplication();
     checkTagsSearchByAnd();
 
+    AutoTagsSupport autoTagsSupport = checkSupportsAutoTags();
+
+    if (autoTagsSupport.supports) {
+      checkFileToAutoAssignTag("aaa.mp3", autoTagsSupport.mp3Tag);
+      checkFileToAutoAssignTag("aaa.bbb.ccc.mp3", autoTagsSupport.mp3Tag);
+      checkFileToAutoAssignTag("AAA.MP3", autoTagsSupport.mp3Tag);
+      checkFileToAutoAssignTag("звук.mp3", autoTagsSupport.mp3Tag);
+      checkFileToAutoAssignTag("mp3", null);
+      checkFileToAutoAssignTag("aaa.mp3.bbb", null);
+    }
+
     reportCollectedErrors();
+  }
+
+  @Data
+  static class AutoTagsSupport {
+    private final boolean supports;
+    private final String mp3Tag;
+  }
+
+  private AutoTagsSupport checkSupportsAutoTags() {
+    Resp resp =
+        checkSuccess(
+            "add file", req.post(endpoint, json().add("name", "file.mp3").add("size", 123)));
+    Object tags = resp.getJson().get("tags");
+    return tags instanceof List && !((List<?>) tags).isEmpty()
+        ? new AutoTagsSupport(true, (String) ((List<?>) tags).get(0))
+        : new AutoTagsSupport(false, null);
+  }
+
+  private void checkFileToAutoAssignTag(String fileName, String shouldHaveTag) {
+    Resp resp =
+        checkSuccess("add file", req.post(endpoint, json().add("name", fileName).add("size", 123)));
+
+    Object tags = resp.getJson().get("tags");
+
+    if (shouldHaveTag != null && !List.of(shouldHaveTag).equals(tags)) {
+      errors.addError(
+          "File with name '" + fileName + "' should have tag '" + shouldHaveTag + "' auto-assigned",
+          resp);
+    } else if (shouldHaveTag == null && tags instanceof List && !((List<?>) tags).isEmpty()) {
+      errors.addError(
+          "File with name '" + fileName + "' should NOT have any tags auto-assigned", resp);
+    }
   }
 
   private void checkTagsAddition() {
