@@ -64,6 +64,10 @@ public class FileStorageChecker {
     checkTagsDuplication();
     checkTagsSearchByAnd();
 
+    checkNonExistentFileTagDeletion();
+    checkNonExistentTagDeletion();
+    // TODO check existent tag deletion
+
     AutoTagsSupport autoTagsSupport = checkSupportsAutoTags();
 
     if (autoTagsSupport.supports) {
@@ -73,9 +77,35 @@ public class FileStorageChecker {
       checkFileToAutoAssignTag("звук.mp3", autoTagsSupport.mp3Tag);
       checkFileToAutoAssignTag("mp3", null);
       checkFileToAutoAssignTag("aaa.mp3.bbb", null);
+
+      // TODO check removal of auto-assigned tag - is it possible?
     }
 
+    // TODO check paging
+
     reportCollectedErrors();
+  }
+
+  private void checkNonExistentFileTagDeletion() {
+    checksCount++;
+
+    Resp resp = req.delete(endpoint + "/Non-existent-file-id/tags", jsonList().add("tag"));
+    int status = resp.getStatus();
+    if (status != 400 && status != 404) {
+      errors.addError("Deletion tag for non-existent file should cause status 400 or 404", resp);
+    }
+  }
+
+  private void checkNonExistentTagDeletion() {
+    checksCount++;
+
+    FileObj file = createFileAfterDbClean("file", 123); // no tags
+
+    Resp resp = req.delete(endpoint + "/" + file.id + "/tags", jsonList().add("tag"));
+    int status = resp.getStatus();
+    if (status != 400 && status != 404) {
+      errors.addError("Deletion non-existent tag should cause status 400 or 404", resp);
+    }
   }
 
   private void checkFileAdditionUndocumentedFields() {

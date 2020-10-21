@@ -47,6 +47,16 @@ public class Req {
         uriVariables);
   }
 
+  Resp delete(String url, JsonUtil.JsonBuilder body, Object... uriVariables) {
+    return exec(
+        HttpMethod.DELETE,
+        url,
+        RequestEntity.post(URI.create(url))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(body.toString()),
+        uriVariables);
+  }
+
   private Resp exec(
       HttpMethod method, String url, RequestEntity<?> requestEntity, Object... uriVariables) {
     ResponseEntity<String> responseEntity;
