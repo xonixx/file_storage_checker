@@ -406,6 +406,7 @@ public class FileStorageChecker {
   private void checkIncorrectFilesAddition() {
     checkIncorrectlyAddedFile("aaa.ext1", null);
     checkIncorrectlyAddedFile("aaa.ext1", -123);
+    checkIncorrectlyAddedFile("", 123);
     checkIncorrectlyAddedFile(null, 123);
     checkIncorrectlyAddedFile(null, null);
   }
