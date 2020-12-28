@@ -160,7 +160,7 @@ public final class JsonUtil {
     return new JsonMapBuilder();
   }
 
-  public static JsonListBuilder jsonList(List<?> values) {
+  public static JsonListBuilder jsonList(Collection<?> values) {
     JsonListBuilder l = jsonList();
     for (Object value : values) {
       l.add(value);
