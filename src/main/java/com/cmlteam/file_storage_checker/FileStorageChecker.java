@@ -151,7 +151,14 @@ public class FileStorageChecker {
 
     Resp resp = req.get(endpoint);
 
-    Map file = (Map) ((List) resp.getJson().get("page")).get(0);
+    List page = (List) resp.getJson().get("page");
+    if (page.size() != 1) {
+      throw new RuntimeException(
+          "Should be just 1 record in result, but was "
+              + page.size()
+              + ". Looks like ES deletion didn't work");
+    }
+    Map file = (Map) page.get(0);
     String id = (String) file.get("id");
     if (id == null) {
       id = (String) file.get("ID");
