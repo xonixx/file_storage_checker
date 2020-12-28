@@ -14,7 +14,7 @@ public class Resp {
   private final RequestEntity<?> requestEntity;
   private final ResponseEntity<String> responseEntity;
 
-  @Getter private final Map<String, ?> json;
+  @Getter private final Map<String, ?> json; // TODO make this something more clever
 
   @Getter private final List<String> errors = new ArrayList<>();
 

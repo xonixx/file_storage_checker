@@ -438,6 +438,12 @@ public class FileStorageChecker {
               + " should cause status 400 but resulted in status="
               + status);
       err.add("" + resp.getJson());
+    } else {
+      Object error = resp.getJson().get("error");
+      if ("error description".equals(error)) {
+        errors.addError(
+            "Error message should describe the actual error, not be just '" + error + "'", resp);
+      }
     }
 
     if (!err.isEmpty()) {
