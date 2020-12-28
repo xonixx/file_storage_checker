@@ -200,8 +200,8 @@ public class FileStorageChecker {
       List<String> tagsList = List.of("tag1", "tag2");
       addTagsCheckingSuccess(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
-      List tags = getTags(resp1);
-      if (!tagsList.equals(tags)) {
+      List<String> tags = getTags(resp1);
+      if (!checkListsEqualSorted(tagsList, tags)) {
         errors.addError("Incorrect tags returned after addition of " + tagsList, resp1);
       }
 
@@ -209,8 +209,8 @@ public class FileStorageChecker {
       checksCount++;
       addTagsCheckingSuccess(id, tagsList);
       Resp resp2 = checkSuccess("list files after tags addition", req.get(endpoint));
-      List tags2 = getTags(resp2);
-      if (!tagsList.equals(tags2)) {
+      List<String> tags2 = getTags(resp2);
+      if (!checkListsEqualSorted(tagsList, tags2)) {
         errors.addError("Tags should not duplicate on repeating addition of " + tagsList, resp2);
       }
 
@@ -219,15 +219,24 @@ public class FileStorageChecker {
       List<String> tagsList34 = List.of("tag3", "tag4");
       addTagsCheckingSuccess(id, tagsList34);
       Resp resp3 = checkSuccess("list files after tags addition", req.get(endpoint));
-      List tags3 = getTags(resp3);
+      List<String> tags3 = getTags(resp3);
       List<String> correct = new ArrayList<>();
       correct.addAll(tagsList);
       correct.addAll(tagsList34);
-      if (!correct.equals(tags3)) {
+
+      if (!checkListsEqualSorted(correct, tags3)) {
         errors.addError(
             "Tags should be appended to existing, not replace them. Should be " + correct, resp3);
       }
     }
+  }
+
+  static boolean checkListsEqualSorted(List<String> l1, List<String> l2) {
+    List<String> al1 = new ArrayList<>(l1);
+    List<String> al2 = new ArrayList<>(l2);
+    al1.sort(String::compareTo);
+    al2.sort(String::compareTo);
+    return al1.equals(al2);
   }
 
   private void checkTagsAdditionNonExistentFile() {
@@ -257,8 +266,8 @@ public class FileStorageChecker {
       List<String> tagsList = List.of("tag", "tag");
       addTagsCheckingSuccess(id, tagsList);
       Resp resp1 = checkSuccess("list files after tags addition", req.get(endpoint));
-      List tags = getTags(resp1);
-      if (tagsList.equals(tags)) {
+      List<String> tags = getTags(resp1);
+      if (checkListsEqualSorted(tagsList, tags)) {
         errors.addError("Tags should not duplicate after addition " + tagsList, resp1);
       }
     }
@@ -309,7 +318,7 @@ public class FileStorageChecker {
     }
   }
 
-  private List getTags(Resp resp) {
+  private List<String> getTags(Resp resp) {
     Map<String, ?> json = resp.getJson();
 
     List page = (List) json.get("page");
