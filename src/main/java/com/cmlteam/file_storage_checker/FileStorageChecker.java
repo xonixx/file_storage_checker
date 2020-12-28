@@ -82,6 +82,7 @@ public class FileStorageChecker {
     }
 
     // TODO check paging
+    checkPagingInvalidParams();
 
     reportCollectedErrors();
   }
@@ -124,12 +125,14 @@ public class FileStorageChecker {
 
   @Data
   static class AutoTagsSupport {
+
     final boolean supports;
     final String mp3Tag;
   }
 
   @Data
   static class FileObj {
+
     final String id;
     final String name;
     final Integer size;
@@ -482,6 +485,19 @@ public class FileStorageChecker {
 
     if (total > 0) {
       errors.addError("The storage contains some files just after start - should be empty", resp);
+    }
+  }
+
+  private void checkPagingInvalidParams() {
+    checksCount++;
+
+    String pagingParams = "?page=a&size=b";
+    Resp resp = req.get(endpoint + pagingParams);
+
+    if (resp.getStatus() < 400 || resp.getStatus() > 499) {
+      errors.addError(
+          "Pagination via '" + pagingParams + "' should cause status 400 not " + resp.getStatus(),
+          resp);
     }
   }
 }
