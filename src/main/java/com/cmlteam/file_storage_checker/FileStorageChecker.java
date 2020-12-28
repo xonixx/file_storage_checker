@@ -146,9 +146,15 @@ public class FileStorageChecker {
 
   private FileObj createFileAfterDbClean(JsonUtil.JsonBuilder json) {
     deleteAllFilesFromES();
-
+//    try {
+//      Thread.sleep(1000);
+//    } catch (InterruptedException e) {
+//    }
     checkSuccess("add file", req.post(endpoint, json));
-
+//    try {
+//      Thread.sleep(1000);
+//    } catch (InterruptedException e) {
+//    }
     Resp resp = req.get(endpoint);
 
     List page = (List) resp.getJson().get("page");
